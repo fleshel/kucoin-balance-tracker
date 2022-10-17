@@ -1,16 +1,17 @@
 import os
-import time
 import base64
 import hmac
 import hashlib
+import datetime
+import time
 
 from dotenv import load_dotenv
 load_dotenv()
 
 import requests
 
-#   import boto3
-#   from botocore.config import Config
+import boto3
+from botocore.config import Config
 
 BASE_URL = "https://api.kucoin.com"
 
@@ -23,8 +24,8 @@ endpoints = {
     "TIMESTAMP": "/api/v1/timestamp"
 }
 
-#Returns -- AWS Connection
-'''
+#Returns -- AWS boto3 client
+
 def connect_to_aws():
     aws_config = Config(
         region_name = 'us-east-1',
@@ -37,9 +38,8 @@ def connect_to_aws():
         config=aws_config)
 
     return dynamo
-'''
 
-def load_data():
+def load_data(table='fleshel-kucoin'):
     now = int(time.time() * 1000)
     str_to_sign = str(now) + 'GET' + '/api/v1/accounts'
 
@@ -65,12 +65,17 @@ def load_data():
     print('fetched data for {n} accounts'.format(n=len(response_data)), end='\n\n')
 
     balances = {}
+    accounts = {}
     skipped_accts = 0
 
     for a in range(len(response_data)):
         #   print('account: {act}'.format(act=account))
         account = response_data[a]
         
+        print(account)
+
+        accounts[account['id']] = account['balance']
+
         curr = account['currency']
         balance = account['balance']
 
@@ -106,8 +111,19 @@ def load_data():
         
     print('\nSkipped {n} empty coins'.format(n=hidden_bals))
 
-    #dynamo = connect_to_aws()
+    dynamo = connect_to_aws()
 
-    #print(dynamo)
+    print(accounts)
+    record = {
+        "date": {
+            'S': str(datetime.datetime.now()), #   TODO: change to now with time?
+        }
+    }
+    for account in accounts:
+        record[account] = {
+            'N': str(accounts[account])
+        }
+
+    dynamo.put_item(TableName=table, Item=record)
 
 load_data()
