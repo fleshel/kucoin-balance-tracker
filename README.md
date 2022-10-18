@@ -20,8 +20,11 @@ there are a few packages necessary to install prior to running.
 - requests
     - used to request balance from the KuCoin API
 
+-pymongo
+    - used to push data to a remote mongodb database
+
 you can install these with
-`pip install python_dotenv requests` if they have not been installed already.
+`pip install python_dotenv requests pymongo` if they have not been installed already.
 
 ### usage
 in order to run the application, simply enter `python3 main.py`
