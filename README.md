@@ -20,7 +20,7 @@ there are a few packages necessary to install prior to running.
 - requests
     - used to request balance from the KuCoin API
 
--pymongo
+- pymongo
     - used to push data to a remote mongodb database
 
 you can install these with
