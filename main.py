@@ -10,8 +10,8 @@ load_dotenv()
 
 import requests
 
-import boto3
-from botocore.config import Config
+from pymongo import MongoClient
+
 
 BASE_URL = "https://api.kucoin.com"
 
@@ -24,22 +24,34 @@ endpoints = {
     "TIMESTAMP": "/api/v1/timestamp"
 }
 
-#Returns -- AWS boto3 client
+'''
+method connect_to_mongo
 
-def connect_to_aws():
-    aws_config = Config(
-        region_name = 'us-east-1',
-        signature_version = 'v4',
-    )
+args
+----
+none
 
-    dynamo = boto3.client('dynamodb',
-        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-        config=aws_config)
+returns
+-------
+MongoDB client
 
-    return dynamo
+'''
+def connect_to_mongo():
+    client = MongoClient(os.getenv('MONGO_CONNECTION_STRING'))
+    return client
 
-def load_data(table='fleshel-kucoin'):
+'''
+method save_data
+
+args
+----
+database
+    - String -> MongoDB Database to insert into
+table
+    - String -> Collection within `database` to insert into
+
+'''
+def save_data(database, table):
     now = int(time.time() * 1000)
     str_to_sign = str(now) + 'GET' + '/api/v1/accounts'
 
@@ -111,19 +123,18 @@ def load_data(table='fleshel-kucoin'):
         
     print('\nSkipped {n} empty coins'.format(n=hidden_bals))
 
-    dynamo = connect_to_aws()
-
     print(accounts)
     record = {
-        "date": {
-            'S': str(datetime.datetime.now()), #   TODO: change to now with time?
-        }
+        "timeRecorded": datetime.datetime.now(), #   TODO: change to now with time?
     }
     for account in accounts:
-        record[account] = {
-            'N': str(accounts[account])
-        }
+        record[account] = accounts[account]
+    
+    print(record)
+    
+    client = connect_to_mongo()
+    client[database][table].insert_one(record)
 
-    dynamo.put_item(TableName=table, Item=record)
-
-load_data()
+while(True):
+    save_data('balances', 'test')
+    time.sleep(60 * 30) #sleep for 30 minutes

@@ -9,6 +9,7 @@ you need to update your environment variables prior to using. this can be done b
 - KUCOIN\_API_KEY=***
 - KUCOIN\_API_SECRET=***
 - KUCOIN\_API_PASSPHRASE=***
+- MONGO_CONNECTION_STRING=***
 
 ### external libraries
 there are a few packages necessary to install prior to running.
